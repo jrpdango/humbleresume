@@ -5,6 +5,8 @@ import { useFileSystem } from "../composables/useFileSystem";
 import { setTemplate, setAppTheme } from "../services/theme";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { TemplateName, PageSize } from "../stores/appStore";
+import moonSvg from "../assets/moon.svg?raw";
+import sunSvg from "../assets/sun.svg?raw";
 
 const { saveFile, saveFileAs, openFile } = useFileSystem();
 
@@ -97,7 +99,7 @@ async function openUpdatePage() {
         "
         @click="toggleTheme"
       >
-        {{ appStore.appTheme === "dark" ? "☀" : "☾" }}
+        <span class="btn-icon-svg" v-html="appStore.appTheme === 'dark' ? moonSvg : sunSvg" />
       </button>
       <button
         v-if="appStore.updateAvailable"
@@ -180,6 +182,9 @@ async function openUpdatePage() {
 }
 
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
@@ -187,12 +192,19 @@ async function openUpdatePage() {
   color: var(--text);
   padding: 4px 6px;
   border-radius: 4px;
-  line-height: 1;
   transition: background 0.12s;
 }
 
 .btn-icon:hover {
   background: var(--btn-hover);
+}
+
+.btn-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .select {
