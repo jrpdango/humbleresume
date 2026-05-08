@@ -1,17 +1,27 @@
 @media print {
+  html,
+  body,
+  #app {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
   .toolbar,
   .editor-pane,
   .home-screen-wrapper {
     display: none !important;
   }
 
-  .app-layout {
+  .app-layout,
+  .editor-layout {
     display: block !important;
+    overflow: visible !important;
+    height: auto !important;
   }
 
   .preview-pane {
     display: block !important;
-    width: 100% !important;
+    width: auto !important;
     height: auto !important;
     overflow: visible !important;
     padding: 0 !important;
@@ -21,12 +31,6 @@
   .page {
     box-shadow: none !important;
     margin: 0 !important;
-    width: 100% !important;
     min-height: auto !important;
-    padding: 0 !important;
-  }
-
-  @page {
-    margin: 20mm;
   }
 }
