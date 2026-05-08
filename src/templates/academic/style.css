@@ -1,5 +1,5 @@
 .page {
-  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  font-family: "EB Garamond", Georgia, "Times New Roman", serif;
   font-size: 11pt;
   line-height: 1.6;
   color: #1a1a1a;
@@ -34,7 +34,8 @@
   margin-bottom: 6px;
 }
 
-.page ul, .page ol {
+.page ul,
+.page ol {
   margin: 4px 0 10px 22px;
 }
 
@@ -69,7 +70,7 @@
 }
 
 .page code {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 9.5pt;
   background: #f5f5f5;
   padding: 1px 3px;

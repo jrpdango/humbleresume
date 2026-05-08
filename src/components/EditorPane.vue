@@ -1,40 +1,50 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useEditor } from '../composables/useEditor'
-import { appStore } from '../stores/appStore'
+import { ref, onMounted, onUnmounted, watch } from "vue";
+import { useEditor } from "../composables/useEditor";
+import { appStore } from "../stores/appStore";
 
 const props = defineProps<{
-  onEditorScroll?: (scrollTop: number, scrollHeight: number, clientHeight: number) => void
-}>()
+  onEditorScroll?: (
+    scrollTop: number,
+    scrollHeight: number,
+    clientHeight: number,
+  ) => void;
+}>();
 
 const emit = defineEmits<{
-  contentChange: [content: string]
-}>()
+  contentChange: [content: string];
+}>();
 
-const containerRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null);
 
-const { initEditor, setContent, setTheme, setScrollByRatio, dispose } = useEditor(
-  containerRef,
-  (content) => {
-    if (appStore.currentFile) appStore.currentFile.content = content
-    emit('contentChange', content)
-  },
-  (scrollTop, scrollHeight, clientHeight) => {
-    props.onEditorScroll?.(scrollTop, scrollHeight, clientHeight)
-  },
-)
+const { initEditor, setContent, setTheme, setScrollByRatio, dispose } =
+  useEditor(
+    containerRef,
+    (content) => {
+      if (appStore.currentFile) appStore.currentFile.content = content;
+      emit("contentChange", content);
+    },
+    (scrollTop, scrollHeight, clientHeight) => {
+      props.onEditorScroll?.(scrollTop, scrollHeight, clientHeight);
+    },
+  );
 
-onMounted(() => initEditor())
-onUnmounted(() => dispose())
+onMounted(() => initEditor());
+onUnmounted(() => dispose());
 
 watch(
   () => appStore.currentFile?.content,
-  (content) => { if (content !== undefined) setContent(content) },
-)
+  (content) => {
+    if (content !== undefined) setContent(content);
+  },
+);
 
-watch(() => appStore.appTheme, (theme) => setTheme(theme))
+watch(
+  () => appStore.appTheme,
+  (theme) => setTheme(theme),
+);
 
-defineExpose({ setScrollByRatio })
+defineExpose({ setScrollByRatio });
 </script>
 
 <template>

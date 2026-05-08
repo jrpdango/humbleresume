@@ -1,46 +1,49 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { appStore, persistSettings } from '../stores/appStore'
-import { useFileSystem } from '../composables/useFileSystem'
-import { setTemplate, setAppTheme } from '../services/theme'
-import { openUrl } from '@tauri-apps/plugin-opener'
-import type { TemplateName, PageSize } from '../stores/appStore'
+import { computed } from "vue";
+import { appStore, persistSettings } from "../stores/appStore";
+import { useFileSystem } from "../composables/useFileSystem";
+import { setTemplate, setAppTheme } from "../services/theme";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import type { TemplateName, PageSize } from "../stores/appStore";
 
-const { saveFile, saveFileAs, openFile } = useFileSystem()
+const { saveFile, saveFileAs, openFile } = useFileSystem();
 
 const saveStatusLabel = computed(() => {
   switch (appStore.saveStatus) {
-    case 'saving': return 'Saving…'
-    case 'unsaved': return 'Unsaved'
-    default: return 'Saved'
+    case "saving":
+      return "Saving…";
+    case "unsaved":
+      return "Unsaved";
+    default:
+      return "Saved";
   }
-})
+});
 
 const saveStatusClass = computed(() => ({
-  'status-saved': appStore.saveStatus === 'saved',
-  'status-saving': appStore.saveStatus === 'saving',
-  'status-unsaved': appStore.saveStatus === 'unsaved',
-}))
+  "status-saved": appStore.saveStatus === "saved",
+  "status-saving": appStore.saveStatus === "saving",
+  "status-unsaved": appStore.saveStatus === "unsaved",
+}));
 
 function goHome() {
-  appStore.view = 'home'
+  appStore.view = "home";
 }
 
 function exportPdf() {
-  window.print()
+  window.print();
 }
 
 function toggleTheme() {
-  setAppTheme(appStore.appTheme === 'light' ? 'dark' : 'light')
+  setAppTheme(appStore.appTheme === "light" ? "dark" : "light");
 }
 
 function changePageSize(e: Event) {
-  appStore.pageSize = (e.target as HTMLSelectElement).value as PageSize
-  persistSettings()
+  appStore.pageSize = (e.target as HTMLSelectElement).value as PageSize;
+  persistSettings();
 }
 
 async function openUpdatePage() {
-  if (appStore.updateAvailable) await openUrl(appStore.updateAvailable.url)
+  if (appStore.updateAvailable) await openUrl(appStore.updateAvailable.url);
 }
 </script>
 
@@ -59,13 +62,21 @@ async function openUpdatePage() {
       <select
         class="select"
         :value="appStore.templateName"
-        @change="setTemplate(($event.target as HTMLSelectElement).value as TemplateName)"
+        @change="
+          setTemplate(
+            ($event.target as HTMLSelectElement).value as TemplateName,
+          )
+        "
       >
         <option value="modern">Modern</option>
         <option value="minimal">Minimal</option>
         <option value="academic">Academic</option>
       </select>
-      <select class="select" :value="appStore.pageSize" @change="changePageSize">
+      <select
+        class="select"
+        :value="appStore.pageSize"
+        @change="changePageSize"
+      >
         <option value="A4">A4</option>
         <option value="Letter">Letter</option>
       </select>
@@ -74,13 +85,19 @@ async function openUpdatePage() {
     </div>
 
     <div class="toolbar-section toolbar-right">
-      <span class="save-status" :class="saveStatusClass">{{ saveStatusLabel }}</span>
+      <span class="save-status" :class="saveStatusClass">{{
+        saveStatusLabel
+      }}</span>
       <button
         class="btn-icon"
-        :title="appStore.appTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        :title="
+          appStore.appTheme === 'dark'
+            ? 'Switch to light mode'
+            : 'Switch to dark mode'
+        "
         @click="toggleTheme"
       >
-        {{ appStore.appTheme === 'dark' ? '☀' : '☾' }}
+        {{ appStore.appTheme === "dark" ? "☀" : "☾" }}
       </button>
       <button
         v-if="appStore.updateAvailable"
@@ -140,7 +157,9 @@ async function openUpdatePage() {
   white-space: nowrap;
 }
 
-.btn:hover { background: var(--btn-hover); }
+.btn:hover {
+  background: var(--btn-hover);
+}
 
 .btn-primary {
   background: var(--accent);
@@ -172,7 +191,9 @@ async function openUpdatePage() {
   transition: background 0.12s;
 }
 
-.btn-icon:hover { background: var(--btn-hover); }
+.btn-icon:hover {
+  background: var(--btn-hover);
+}
 
 .select {
   padding: 4px 6px;
@@ -198,7 +219,16 @@ async function openUpdatePage() {
   white-space: nowrap;
 }
 
-.status-saved  { background: #d1fae5; color: #065f46; }
-.status-saving { background: #fef3c7; color: #92400e; }
-.status-unsaved { background: #fee2e2; color: #991b1b; }
+.status-saved {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-saving {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-unsaved {
+  background: #fee2e2;
+  color: #991b1b;
+}
 </style>

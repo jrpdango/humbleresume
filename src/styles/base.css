@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -32,9 +34,11 @@
   --hover-bg: #1e293b;
 }
 
-html, body {
+html,
+body {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -45,6 +49,8 @@ html, body {
   flex-direction: column;
 }
 
-button, select, input {
+button,
+select,
+input {
   font-family: inherit;
 }

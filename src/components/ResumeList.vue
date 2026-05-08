@@ -1,36 +1,46 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { appStore, removeRecentFile } from '../stores/appStore'
-import { useFileSystem } from '../composables/useFileSystem'
-import { setTemplate, starterContent } from '../services/theme'
-import type { TemplateName } from '../stores/appStore'
+import { computed } from "vue";
+import { appStore, removeRecentFile } from "../stores/appStore";
+import { useFileSystem } from "../composables/useFileSystem";
+import { setTemplate, starterContent } from "../services/theme";
+import type { TemplateName } from "../stores/appStore";
 
-const { openFile, newFile } = useFileSystem()
+const { openFile, newFile } = useFileSystem();
 
 const recentFiles = computed(() =>
   [...appStore.recentFiles].sort((a, b) => b.lastOpened - a.lastOpened),
-)
+);
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function startNew() {
-  newFile(starterContent[appStore.templateName])
+  newFile(starterContent[appStore.templateName]);
 }
 
 function removeRecent(path: string, e: MouseEvent) {
-  e.stopPropagation()
-  removeRecentFile(path)
+  e.stopPropagation();
+  removeRecentFile(path);
 }
 
 const templates: { key: TemplateName; label: string; desc: string }[] = [
-  { key: 'modern', label: 'Modern', desc: 'Clean, blue accents, bold sections' },
-  { key: 'minimal', label: 'Minimal', desc: 'Simple, no-frills, high contrast' },
-  { key: 'academic', label: 'Academic', desc: 'Serif font, CV-style layout' },
-]
+  {
+    key: "modern",
+    label: "Modern",
+    desc: "Clean, blue accents, bold sections",
+  },
+  {
+    key: "minimal",
+    label: "Minimal",
+    desc: "Simple, no-frills, high contrast",
+  },
+  { key: "academic", label: "Academic", desc: "Serif font, CV-style layout" },
+];
 </script>
 
 <template>
@@ -86,12 +96,16 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
             class="remove-btn"
             title="Remove from list"
             @click="removeRecent(file.path, $event)"
-          >✕</button>
+          >
+            ✕
+          </button>
         </li>
       </ul>
     </div>
 
-    <p v-else class="empty-state">No recent files. Create a new resume to get started.</p>
+    <p v-else class="empty-state">
+      No recent files. Create a new resume to get started.
+    </p>
   </div>
 </template>
 
@@ -107,7 +121,9 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   width: 100%;
 }
 
-.home-header { text-align: center; }
+.home-header {
+  text-align: center;
+}
 
 .logo-text {
   font-size: 2.4rem;
@@ -122,7 +138,9 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   font-size: 1rem;
 }
 
-.section { width: 100%; }
+.section {
+  width: 100%;
+}
 
 .section-label {
   font-size: 0.75rem;
@@ -150,7 +168,9 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   background: var(--card-bg);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .template-card:hover {
@@ -194,7 +214,9 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .btn-action:hover {
@@ -235,9 +257,14 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   transition: background 0.1s;
 }
 
-.recent-item:hover { background: var(--hover-bg); }
+.recent-item:hover {
+  background: var(--hover-bg);
+}
 
-.recent-icon { font-size: 1.1rem; flex-shrink: 0; }
+.recent-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
 
 .recent-info {
   flex: 1;
@@ -280,7 +307,9 @@ const templates: { key: TemplateName; label: string; desc: string }[] = [
   flex-shrink: 0;
 }
 
-.recent-item:hover .remove-btn { opacity: 1; }
+.recent-item:hover .remove-btn {
+  opacity: 1;
+}
 
 .empty-state {
   color: var(--text-muted);

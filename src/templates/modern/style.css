@@ -1,5 +1,9 @@
 .page {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    system-ui,
+    sans-serif;
   font-size: 10pt;
   line-height: 1.55;
   color: #1e293b;
@@ -35,7 +39,8 @@
   margin-bottom: 5px;
 }
 
-.page ul, .page ol {
+.page ul,
+.page ol {
   margin: 4px 0 8px 18px;
 }
 
@@ -69,7 +74,7 @@
 }
 
 .page code {
-  font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-family: "Fira Code", "Cascadia Code", Consolas, monospace;
   font-size: 8.5pt;
   background: #f1f5f9;
   padding: 1px 4px;

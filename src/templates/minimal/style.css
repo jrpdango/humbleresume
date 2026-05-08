@@ -1,5 +1,6 @@
 .page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   font-size: 10pt;
   line-height: 1.6;
   color: #111;
@@ -33,7 +34,8 @@
   margin-bottom: 4px;
 }
 
-.page ul, .page ol {
+.page ul,
+.page ol {
   margin: 4px 0 6px 16px;
 }
 

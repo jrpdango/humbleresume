@@ -1,64 +1,64 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { usePreview } from '../composables/usePreview'
-import { getTemplateCss } from '../services/theme'
-import { appStore } from '../stores/appStore'
-import 'katex/dist/katex.min.css'
+import { ref, watch, onMounted, onUnmounted } from "vue";
+import { usePreview } from "../composables/usePreview";
+import { getTemplateCss } from "../services/theme";
+import { appStore } from "../stores/appStore";
+import "katex/dist/katex.min.css";
 
 const emit = defineEmits<{
-  scroll: [scrollTop: number, scrollHeight: number, clientHeight: number]
-}>()
+  scroll: [scrollTop: number, scrollHeight: number, clientHeight: number];
+}>();
 
-const containerRef = ref<HTMLElement | null>(null)
-const { previewHtml, update, getPageClass } = usePreview()
+const containerRef = ref<HTMLElement | null>(null);
+const { previewHtml, update, getPageClass } = usePreview();
 
-let templateStyleEl: HTMLStyleElement | null = null
+let templateStyleEl: HTMLStyleElement | null = null;
 
 function injectTemplateStyle() {
   if (!templateStyleEl) {
-    templateStyleEl = document.createElement('style')
-    document.head.appendChild(templateStyleEl)
+    templateStyleEl = document.createElement("style");
+    document.head.appendChild(templateStyleEl);
   }
-  templateStyleEl.textContent = getTemplateCss(appStore.templateName)
+  templateStyleEl.textContent = getTemplateCss(appStore.templateName);
 }
 
 onMounted(() => {
-  injectTemplateStyle()
-  if (appStore.currentFile) update(appStore.currentFile.content)
-})
+  injectTemplateStyle();
+  if (appStore.currentFile) update(appStore.currentFile.content);
+});
 
 onUnmounted(() => {
-  templateStyleEl?.remove()
-  templateStyleEl = null
-})
+  templateStyleEl?.remove();
+  templateStyleEl = null;
+});
 
-watch(() => appStore.currentFile?.content, (content) => {
-  if (content !== undefined) update(content)
-})
+watch(
+  () => appStore.currentFile?.content,
+  (content) => {
+    if (content !== undefined) update(content);
+  },
+);
 
-watch(() => appStore.templateName, () => injectTemplateStyle())
+watch(
+  () => appStore.templateName,
+  () => injectTemplateStyle(),
+);
 
 function onScroll(e: Event) {
-  const el = e.target as HTMLElement
-  emit('scroll', el.scrollTop, el.scrollHeight, el.clientHeight)
+  const el = e.target as HTMLElement;
+  emit("scroll", el.scrollTop, el.scrollHeight, el.clientHeight);
 }
 
 defineExpose({
-  get el() { return containerRef.value },
-})
+  get el() {
+    return containerRef.value;
+  },
+});
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="preview-pane"
-    @scroll.passive="onScroll"
-  >
-    <div
-      class="page"
-      :class="getPageClass()"
-      v-html="previewHtml"
-    />
+  <div ref="containerRef" class="preview-pane" @scroll.passive="onScroll">
+    <div class="page" :class="getPageClass()" v-html="previewHtml" />
   </div>
 </template>
 

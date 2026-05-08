@@ -1,56 +1,69 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { appStore } from './stores/appStore'
-import { setAppTheme } from './services/theme'
-import { useFileSystem } from './composables/useFileSystem'
-import { useScrollSync } from './composables/useScrollSync'
-import Toolbar from './components/Toolbar.vue'
-import EditorPane from './components/EditorPane.vue'
-import PreviewPane from './components/PreviewPane.vue'
-import ResumeList from './components/ResumeList.vue'
+import { ref, computed, onMounted } from "vue";
+import { appStore } from "./stores/appStore";
+import { setAppTheme } from "./services/theme";
+import { useFileSystem } from "./composables/useFileSystem";
+import { useScrollSync } from "./composables/useScrollSync";
+import Toolbar from "./components/Toolbar.vue";
+import EditorPane from "./components/EditorPane.vue";
+import PreviewPane from "./components/PreviewPane.vue";
+import ResumeList from "./components/ResumeList.vue";
 
-const CURRENT_VERSION = '0.1.0'
-const GITHUB_REPO = 'jrpdango/humbleresume'
+const CURRENT_VERSION = "0.1.0";
+const GITHUB_REPO = "jrpdango/humbleresume";
 
-const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null)
-const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null)
+const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
+const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null);
 
-const { scheduleAutosave } = useFileSystem()
-const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync()
+const { scheduleAutosave } = useFileSystem();
+const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync();
 
-const previewEl = computed(() => previewPaneRef.value?.el ?? null)
+const previewEl = computed(() => previewPaneRef.value?.el ?? null);
 
 function onContentChange() {
-  scheduleAutosave()
+  scheduleAutosave();
 }
 
-function onEditorScroll(scrollTop: number, scrollHeight: number, clientHeight: number) {
-  const el = previewEl.value
-  if (el) syncEditorToPreview(scrollTop, scrollHeight, clientHeight, el)
+function onEditorScroll(
+  scrollTop: number,
+  scrollHeight: number,
+  clientHeight: number,
+) {
+  const el = previewEl.value;
+  if (el) syncEditorToPreview(scrollTop, scrollHeight, clientHeight, el);
 }
 
-function onPreviewScroll(scrollTop: number, scrollHeight: number, clientHeight: number) {
+function onPreviewScroll(
+  scrollTop: number,
+  scrollHeight: number,
+  clientHeight: number,
+) {
   syncPreviewToEditor(scrollTop, scrollHeight, clientHeight, (ratio) => {
-    editorPaneRef.value?.setScrollByRatio(ratio)
-  })
+    editorPaneRef.value?.setScrollByRatio(ratio);
+  });
 }
 
 onMounted(async () => {
-  setAppTheme(appStore.appTheme)
+  setAppTheme(appStore.appTheme);
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`)
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+    );
     if (res.ok) {
-      const data = await res.json() as { tag_name: string; html_url: string }
-      const latest = data.tag_name.replace(/^v/, '')
+      const data = (await res.json()) as { tag_name: string; html_url: string };
+      const latest = data.tag_name.replace(/^v/, "");
       if (latest !== CURRENT_VERSION) {
-        appStore.updateAvailable = { version: `v${latest}`, url: data.html_url }
+        appStore.updateAvailable = {
+          version: `v${latest}`,
+          url: data.html_url,
+        };
       }
     }
   } catch {
     // silently ignore
   }
-})
+});
 </script>
 
 <template>
@@ -67,10 +80,7 @@ onMounted(async () => {
           :on-editor-scroll="onEditorScroll"
           @content-change="onContentChange"
         />
-        <PreviewPane
-          ref="previewPaneRef"
-          @scroll="onPreviewScroll"
-        />
+        <PreviewPane ref="previewPaneRef" @scroll="onPreviewScroll" />
       </div>
     </div>
   </div>
