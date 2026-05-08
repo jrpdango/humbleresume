@@ -4,8 +4,11 @@ import {
   save as saveDialog,
 } from "@tauri-apps/plugin-dialog";
 import { appStore, addRecentFile } from "../stores/appStore";
+import { getTemplateCss } from "../services/theme";
 
-let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+function getCssPath(mdPath: string): string {
+  return mdPath.replace(/\.(md|markdown|txt)$/, "") + ".css";
+}
 
 export function useFileSystem() {
   async function openFile(path?: string) {
@@ -19,7 +22,13 @@ export function useFileSystem() {
       filePath = selected;
     }
     const content = await readTextFile(filePath);
-    appStore.currentFile = { path: filePath, content };
+    let customCss: string;
+    try {
+      customCss = await readTextFile(getCssPath(filePath));
+    } catch {
+      customCss = getTemplateCss(appStore.templateName);
+    }
+    appStore.currentFile = { path: filePath, content, customCss };
     appStore.saveStatus = "saved";
     appStore.view = "editor";
     addRecentFile(filePath);
@@ -36,6 +45,12 @@ export function useFileSystem() {
       appStore.currentFile.path,
       appStore.currentFile.content,
     );
+    if (appStore.currentFile.customCss != null) {
+      await writeTextFile(
+        getCssPath(appStore.currentFile.path),
+        appStore.currentFile.customCss,
+      );
+    }
     appStore.saveStatus = "saved";
     addRecentFile(appStore.currentFile.path);
   }
@@ -50,37 +65,26 @@ export function useFileSystem() {
     appStore.currentFile.path = filePath;
     appStore.saveStatus = "saving";
     await writeTextFile(filePath, appStore.currentFile.content);
+    if (appStore.currentFile.customCss != null) {
+      await writeTextFile(getCssPath(filePath), appStore.currentFile.customCss);
+    }
     appStore.saveStatus = "saved";
     addRecentFile(filePath);
   }
 
-  function scheduleAutosave() {
-    if (!appStore.currentFile?.path) {
-      appStore.saveStatus = "unsaved";
-      return;
-    }
+  function markUnsaved() {
     appStore.saveStatus = "unsaved";
-    if (autosaveTimer) clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(async () => {
-      if (!appStore.currentFile?.path) return;
-      appStore.saveStatus = "saving";
-      try {
-        await writeTextFile(
-          appStore.currentFile.path,
-          appStore.currentFile.content,
-        );
-        appStore.saveStatus = "saved";
-      } catch {
-        appStore.saveStatus = "unsaved";
-      }
-    }, 2000);
   }
 
   function newFile(content = "") {
-    appStore.currentFile = { path: null, content };
+    appStore.currentFile = {
+      path: null,
+      content,
+      customCss: getTemplateCss(appStore.templateName),
+    };
     appStore.saveStatus = "unsaved";
     appStore.view = "editor";
   }
 
-  return { openFile, saveFile, saveFileAs, scheduleAutosave, newFile };
+  return { openFile, saveFile, saveFileAs, markUnsaved, newFile };
 }
