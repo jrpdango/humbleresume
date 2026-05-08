@@ -2,8 +2,9 @@
 import { computed } from "vue";
 import { appStore, persistSettings } from "../stores/appStore";
 import { useFileSystem } from "../composables/useFileSystem";
-import { setTemplate, setAppTheme } from "../services/theme";
+import { setTemplate, setAppTheme, getTemplateCss } from "../services/theme";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { confirm as confirmDialog } from "@tauri-apps/plugin-dialog";
 import type { TemplateName, PageSize } from "../stores/appStore";
 import moonSvg from "../assets/moon.svg?raw";
 import sunSvg from "../assets/sun.svg?raw";
@@ -44,6 +45,28 @@ function changePageSize(e: Event) {
   persistSettings();
 }
 
+async function handleTemplateChange(e: Event) {
+  const newTemplate = (e.target as HTMLSelectElement).value as TemplateName;
+  const file = appStore.currentFile;
+  if (
+    file?.customCss != null &&
+    file.customCss !== getTemplateCss(appStore.templateName)
+  ) {
+    const ok = await confirmDialog(
+      "Switching templates will reset your custom CSS to the new template's defaults. Continue?",
+      { title: "Switch Template", kind: "warning" },
+    );
+    if (!ok) {
+      (e.target as HTMLSelectElement).value = appStore.templateName;
+      return;
+    }
+  }
+  setTemplate(newTemplate);
+  if (file) {
+    file.customCss = getTemplateCss(newTemplate);
+  }
+}
+
 async function openUpdatePage() {
   if (appStore.updateAvailable) await openUrl(appStore.updateAvailable.url);
 }
@@ -64,11 +87,7 @@ async function openUpdatePage() {
       <select
         class="select"
         :value="appStore.templateName"
-        @change="
-          setTemplate(
-            ($event.target as HTMLSelectElement).value as TemplateName,
-          )
-        "
+        @change="handleTemplateChange"
       >
         <option value="modern">Modern</option>
         <option value="minimal">Minimal</option>

@@ -5,6 +5,7 @@ export type TemplateName = "modern" | "minimal" | "academic";
 export type AppTheme = "light" | "dark";
 export type SaveStatus = "saved" | "saving" | "unsaved";
 export type PageSize = "A4" | "Letter";
+export type EditorTab = "markdown" | "css";
 
 export interface RecentFile {
   path: string;
@@ -15,6 +16,7 @@ export interface RecentFile {
 export interface CurrentFile {
   path: string | null;
   content: string;
+  customCss: string | null;
 }
 
 interface AppState {
@@ -25,6 +27,7 @@ interface AppState {
   appTheme: AppTheme;
   saveStatus: SaveStatus;
   pageSize: PageSize;
+  editorTab: EditorTab;
   updateAvailable: { version: string; url: string } | null;
 }
 
@@ -50,6 +53,7 @@ export const appStore = reactive<AppState>({
   appTheme: savedSettings.appTheme ?? "light",
   saveStatus: "saved",
   pageSize: savedSettings.pageSize ?? "A4",
+  editorTab: "markdown",
   updateAvailable: null,
 });
 

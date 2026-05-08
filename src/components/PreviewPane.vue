@@ -14,16 +14,17 @@ const { previewHtml, update, getPageClass } = usePreview();
 
 let templateStyleEl: HTMLStyleElement | null = null;
 
-function injectTemplateStyle() {
+function injectStyle() {
   if (!templateStyleEl) {
     templateStyleEl = document.createElement("style");
     document.head.appendChild(templateStyleEl);
   }
-  templateStyleEl.textContent = getTemplateCss(appStore.templateName);
+  templateStyleEl.textContent =
+    appStore.currentFile?.customCss ?? getTemplateCss(appStore.templateName);
 }
 
 onMounted(() => {
-  injectTemplateStyle();
+  injectStyle();
   if (appStore.currentFile) update(appStore.currentFile.content);
 });
 
@@ -40,8 +41,8 @@ watch(
 );
 
 watch(
-  () => appStore.templateName,
-  () => injectTemplateStyle(),
+  () => appStore.currentFile?.customCss,
+  () => injectStyle(),
 );
 
 function onScroll(e: Event) {

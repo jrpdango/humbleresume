@@ -15,13 +15,13 @@ const GITHUB_REPO = "jrpdango/humbleresume";
 const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
 const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null);
 
-const { scheduleAutosave } = useFileSystem();
+const { markUnsaved } = useFileSystem();
 const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync();
 
 const previewEl = computed(() => previewPaneRef.value?.el ?? null);
 
 function onContentChange() {
-  scheduleAutosave();
+  markUnsaved();
 }
 
 function onEditorScroll(
@@ -29,6 +29,7 @@ function onEditorScroll(
   scrollHeight: number,
   clientHeight: number,
 ) {
+  if (appStore.editorTab === "css") return;
   const el = previewEl.value;
   if (el) syncEditorToPreview(scrollTop, scrollHeight, clientHeight, el);
 }
@@ -38,6 +39,7 @@ function onPreviewScroll(
   scrollHeight: number,
   clientHeight: number,
 ) {
+  if (appStore.editorTab === "css") return;
   syncPreviewToEditor(scrollTop, scrollHeight, clientHeight, (ratio) => {
     editorPaneRef.value?.setScrollByRatio(ratio);
   });
