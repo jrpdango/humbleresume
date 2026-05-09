@@ -54,10 +54,13 @@ watch(
   },
 );
 
-watch(() => appStore.templateName, () => {
-  injectStyle();
-  repaginate();
-});
+watch(
+  () => appStore.templateName,
+  () => {
+    injectStyle();
+    repaginate();
+  },
+);
 
 watch(() => appStore.pageSize, repaginate);
 

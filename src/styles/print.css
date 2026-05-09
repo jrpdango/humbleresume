@@ -25,17 +25,10 @@
     height: auto !important;
     overflow: visible !important;
     padding: 0 !important;
-    background: white !important;
   }
 
   .page {
     box-shadow: none !important;
     margin: 0 !important;
-    height: auto !important;
-  }
-
-  .page + .page {
-    page-break-before: always;
-    break-before: page;
   }
 }
