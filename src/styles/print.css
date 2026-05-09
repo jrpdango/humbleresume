@@ -31,6 +31,11 @@
   .page {
     box-shadow: none !important;
     margin: 0 !important;
-    min-height: auto !important;
+    height: auto !important;
+  }
+
+  .page + .page {
+    page-break-before: always;
+    break-before: page;
   }
 }
