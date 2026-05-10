@@ -10,7 +10,7 @@ const emit = defineEmits<{
 }>();
 
 const containerRef = ref<HTMLElement | null>(null);
-const { previewHtml, update, getPageClass } = usePreview();
+const { pages, update, getPageClass } = usePreview();
 
 let templateStyleEl: HTMLStyleElement | null = null;
 
@@ -21,6 +21,12 @@ function injectStyle() {
   }
   templateStyleEl.textContent =
     appStore.currentFile?.customCss ?? getTemplateCss(appStore.templateName);
+}
+
+function repaginate() {
+  if (appStore.currentFile?.content !== undefined) {
+    update(appStore.currentFile.content);
+  }
 }
 
 onMounted(() => {
@@ -42,8 +48,21 @@ watch(
 
 watch(
   () => appStore.currentFile?.customCss,
-  () => injectStyle(),
+  () => {
+    injectStyle();
+    repaginate();
+  },
 );
+
+watch(
+  () => appStore.templateName,
+  () => {
+    injectStyle();
+    repaginate();
+  },
+);
+
+watch(() => appStore.pageSize, repaginate);
 
 function onScroll(e: Event) {
   const el = e.target as HTMLElement;
@@ -59,7 +78,13 @@ defineExpose({
 
 <template>
   <div ref="containerRef" class="preview-pane" @scroll.passive="onScroll">
-    <div class="page" :class="getPageClass()" v-html="previewHtml" />
+    <div
+      v-for="(pageHtml, i) in pages"
+      :key="i"
+      class="page"
+      :class="getPageClass()"
+      v-html="pageHtml"
+    />
   </div>
 </template>
 
@@ -72,6 +97,7 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   padding: 32px 16px;
+  gap: 24px;
   min-width: 0;
 }
 
@@ -80,17 +106,18 @@ defineExpose({
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
   color: #000;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .page-a4 {
-  width: 210mm;
-  min-height: 297mm;
-  padding: 20mm 20mm;
+  width: 8.27in;
+  height: 11.69in;
+  padding: 0.5in 0.5in;
 }
 
 .page-letter {
   width: 8.5in;
-  min-height: 11in;
-  padding: 1in 1in;
+  height: 11in;
+  padding: 0.5in 0.5in;
 }
 </style>
