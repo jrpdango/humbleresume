@@ -121,3 +121,11 @@ defineExpose({
   padding: 0.5in 0.5in;
 }
 </style>
+
+<!-- Outside of scoped since these are injected HTML -->
+<style>
+dl {
+  display: flex;
+  justify-content: space-between;
+}
+</style>

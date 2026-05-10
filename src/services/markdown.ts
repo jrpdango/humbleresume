@@ -1,11 +1,14 @@
 import MarkdownIt from "markdown-it";
 import mk from "@traptitech/markdown-it-katex";
+import deflist from "markdown-it-deflist";
 
 const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
-}).use(mk, { throwOnError: false, errorColor: "#cc0000" });
+})
+  .use(mk, { throwOnError: false, errorColor: "#cc0000" })
+  .use(deflist);
 
 const origParagraphOpen = md.renderer.rules.paragraph_open;
 
