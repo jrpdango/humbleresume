@@ -10,11 +10,6 @@ import PreviewPane from "./components/PreviewPane.vue";
 import ResumeList from "./components/ResumeList.vue";
 
 const CURRENT_VERSION = "0.1.0";
-
-const printPageStyle = computed(() => {
-  const size = appStore.pageSize === "Letter" ? "8.5in 11in" : "210mm 297mm";
-  return `@media print { @page { size: ${size}; margin: 0; } }`;
-});
 const GITHUB_REPO = "jrpdango/humbleresume";
 
 const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
@@ -75,10 +70,6 @@ onMounted(async () => {
 
 <template>
   <div class="app-root" :data-theme="appStore.appTheme">
-    <Teleport to="head">
-      <component :is="'style'" v-text="printPageStyle" />
-    </Teleport>
-
     <div v-if="appStore.view === 'home'" class="home-screen-wrapper">
       <ResumeList />
     </div>

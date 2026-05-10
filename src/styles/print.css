@@ -1,4 +1,8 @@
 @media print {
+  @page {
+    margin: 0 !important;
+  }
+
   html,
   body,
   #app {
