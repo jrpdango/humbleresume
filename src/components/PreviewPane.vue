@@ -109,15 +109,18 @@ defineExpose({
   overflow: visible;
 }
 
+</style>
+
+<style>
 .page-a4 {
-  width: 210mm;
-  height: 297mm;
-  padding: 20mm 20mm;
+  width: 8.27in;
+  height: 11.69in;
+  padding: 0.5in 0.5in;
 }
 
 .page-letter {
   width: 8.5in;
   height: 11in;
-  padding: 1in 1in;
+  padding: 0.5in 0.5in;
 }
 </style>
