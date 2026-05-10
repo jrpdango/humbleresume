@@ -20,7 +20,7 @@ function formatDate(ts: number) {
 }
 
 function startNew() {
-  newFile(starterContent[appStore.templateName]);
+  newFile(starterContent);
 }
 
 function removeRecent(path: string, e: MouseEvent) {

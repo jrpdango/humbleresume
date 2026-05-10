@@ -8,9 +8,7 @@ import modernCss from "../templates/modern/style.css?raw";
 import minimalCss from "../templates/minimal/style.css?raw";
 import academicCss from "../templates/academic/style.css?raw";
 
-import modernStarter from "../templates/modern/starter.md?raw";
-import minimalStarter from "../templates/minimal/starter.md?raw";
-import academicStarter from "../templates/academic/starter.md?raw";
+import starterContent from "../templates/starter.md?raw";
 
 const templateCssMap: Record<TemplateName, string> = {
   modern: modernCss,
@@ -18,11 +16,7 @@ const templateCssMap: Record<TemplateName, string> = {
   academic: academicCss,
 };
 
-export const starterContent: Record<TemplateName, string> = {
-  modern: modernStarter,
-  minimal: minimalStarter,
-  academic: academicStarter,
-};
+export { starterContent };
 
 export function getTemplateCss(name: TemplateName): string {
   return templateCssMap[name];
