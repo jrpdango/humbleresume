@@ -109,9 +109,6 @@ defineExpose({
   overflow: visible;
 }
 
-</style>
-
-<style>
 .page-a4 {
   width: 8.27in;
   height: 11.69in;
