@@ -6,8 +6,7 @@
 
 <p align="center">A simple desktop app for writing resumes in Markdown and exporting them as PDFs.</p>
 
----
-
+> [!NOTE]
 > **This project is in early development.** Expect rough edges.
 
 ## Features
