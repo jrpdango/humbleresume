@@ -11,8 +11,8 @@
 
 ## Features
 
-- Completely offline; all your files are saved locally
 - Markdown editor with live preview
+- All your files are saved locally; the app only ever uses the internet to optionally retrieve Iconify icons
 - PDF export to A4 or Letter page size
 - Multiple basic templates — Modern, Minimal, Academic
 - Custom CSS you can use to edit template styles per resume
