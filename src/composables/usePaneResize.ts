@@ -1,4 +1,4 @@
-import { ref, computed, type Ref } from "vue";
+import { ref, computed, onUnmounted, type Ref } from "vue";
 
 const SPLIT_KEY = "humbleresume-pane-split";
 
@@ -11,6 +11,8 @@ export function usePaneResize(layoutRef: Ref<HTMLElement | null>) {
   function clamp(min: number, max: number, value: number): number {
     return Math.min(max, Math.max(min, value));
   }
+
+  let activeController: AbortController | null = null;
 
   function startDrag(e: PointerEvent) {
     document.body.style.userSelect = "none";
@@ -27,13 +29,14 @@ export function usePaneResize(layoutRef: Ref<HTMLElement | null>) {
       splitPercent.value = clamp(minPct, 100 - minPct, (offset / total) * 100);
     }
 
-    const controller = new AbortController();
-    const { signal } = controller;
+    activeController = new AbortController();
+    const { signal } = activeController;
 
     function stopDrag(e: PointerEvent) {
       document.body.style.userSelect = "";
       el.releasePointerCapture(e.pointerId);
-      controller.abort();
+      activeController?.abort();
+      activeController = null;
       localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
     }
 
@@ -41,6 +44,14 @@ export function usePaneResize(layoutRef: Ref<HTMLElement | null>) {
     el.addEventListener("pointerup", stopDrag, { signal });
     el.addEventListener("pointercancel", stopDrag, { signal });
   }
+
+  onUnmounted(() => {
+    if (activeController) {
+      activeController.abort();
+      activeController = null;
+      document.body.style.userSelect = "";
+    }
+  });
 
   function resetSplit() {
     splitPercent.value = 50;
