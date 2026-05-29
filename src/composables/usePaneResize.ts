@@ -8,37 +8,34 @@ export function usePaneResize(layoutRef: Ref<HTMLElement | null>) {
   const editorFlex = computed(() => splitPercent.value);
   const previewFlex = computed(() => 100 - splitPercent.value);
 
-  let dragRect: DOMRect | null = null;
-  let isVertical = false;
-
   function clamp(min: number, max: number, value: number): number {
     return Math.min(max, Math.max(min, value));
-  }
-
-  function onPointerMove(e: PointerEvent) {
-    if (!dragRect) return;
-    const offset = isVertical ? e.clientY - dragRect.top : e.clientX - dragRect.left;
-    const total = isVertical ? dragRect.height : dragRect.width;
-    const minPct = (20 / total) * 100;
-    splitPercent.value = clamp(minPct, 100 - minPct, (offset / total) * 100);
-  }
-
-  function stopDrag(e: PointerEvent) {
-    document.body.style.userSelect = "";
-    const el = e.currentTarget as HTMLElement;
-    el.releasePointerCapture(e.pointerId);
-    el.removeEventListener("pointermove", onPointerMove);
-    el.removeEventListener("pointerup", stopDrag);
-    el.removeEventListener("pointercancel", stopDrag);
-    localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
   }
 
   function startDrag(e: PointerEvent) {
     document.body.style.userSelect = "none";
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
-    dragRect = layoutRef.value?.getBoundingClientRect() ?? null;
-    isVertical = window.innerWidth <= 900;
+    const dragRect = layoutRef.value?.getBoundingClientRect() ?? null;
+    const isVertical = window.innerWidth <= 900;
+    const total = isVertical ? dragRect?.height ?? 0 : dragRect?.width ?? 0;
+    const minPct = (20 / total) * 100;
+
+    function onPointerMove(e: PointerEvent) {
+      if (!dragRect) return;
+      const offset = isVertical ? e.clientY - dragRect.top : e.clientX - dragRect.left;
+      splitPercent.value = clamp(minPct, 100 - minPct, (offset / total) * 100);
+    }
+
+    function stopDrag(e: PointerEvent) {
+      document.body.style.userSelect = "";
+      el.releasePointerCapture(e.pointerId);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", stopDrag);
+      el.removeEventListener("pointercancel", stopDrag);
+      localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
+    }
+
     el.addEventListener("pointermove", onPointerMove);
     el.addEventListener("pointerup", stopDrag);
     el.addEventListener("pointercancel", stopDrag);
