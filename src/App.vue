@@ -22,22 +22,21 @@ const splitPercent = ref(Number(localStorage.getItem(SPLIT_KEY)) || 50);
 const editorFlex = computed(() => splitPercent.value);
 const previewFlex = computed(() => 100 - splitPercent.value);
 
-function clampSplit(percent: number): number {
-  if (!editorLayoutRef.value) return percent;
-  const rect = editorLayoutRef.value.getBoundingClientRect();
-  const total = window.innerWidth <= 900 ? rect.height : rect.width;
+let dragRect: DOMRect | null = null;
+let isVertical = false;
+
+function clampSplit(percent: number, total: number): number {
   const minPct = (20 / total) * 100;
   return Math.min(100 - minPct, Math.max(minPct, percent));
 }
 
 function applyDrag(clientX: number, clientY: number) {
-  if (!editorLayoutRef.value) return;
-  const rect = editorLayoutRef.value.getBoundingClientRect();
-  const vertical = window.innerWidth <= 900;
-  const offset = vertical ? clientY - rect.top : clientX - rect.left;
-  const total = vertical ? rect.height : rect.width;
-  splitPercent.value = clampSplit((offset / total) * 100);
-  localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
+  if (!dragRect) return;
+
+  const offset = isVertical ? clientY - dragRect.top : clientX - dragRect.left;
+  const total = isVertical ? dragRect.height : dragRect.width;
+
+  splitPercent.value = clampSplit((offset / total) * 100, total);
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -47,16 +46,24 @@ function onPointerMove(e: PointerEvent) {
 function stopDrag(e: PointerEvent) {
   document.body.style.userSelect = "";
   const el = e.currentTarget as HTMLElement;
+
   el.releasePointerCapture(e.pointerId);
   el.removeEventListener("pointermove", onPointerMove);
   el.removeEventListener("pointerup", stopDrag);
   el.removeEventListener("pointercancel", stopDrag);
+
+  localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
 }
 
 function startDrag(e: PointerEvent) {
   document.body.style.userSelect = "none";
   const el = e.currentTarget as HTMLElement;
+
   el.setPointerCapture(e.pointerId);
+
+  dragRect = editorLayoutRef.value?.getBoundingClientRect() ?? null;
+  isVertical = window.innerWidth <= 900;
+
   el.addEventListener("pointermove", onPointerMove);
   el.addEventListener("pointerup", stopDrag);
   el.addEventListener("pointercancel", stopDrag);
