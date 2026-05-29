@@ -4,6 +4,7 @@ import { appStore } from "./stores/appStore";
 import { setAppTheme } from "./services/theme";
 import { useFileSystem } from "./composables/useFileSystem";
 import { useScrollSync } from "./composables/useScrollSync";
+import { usePaneResize } from "./composables/usePaneResize";
 import Toolbar from "./components/Toolbar.vue";
 import EditorPane from "./components/EditorPane.vue";
 import PreviewPane from "./components/PreviewPane.vue";
@@ -16,63 +17,7 @@ const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
 const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null);
 const editorLayoutRef = ref<HTMLElement | null>(null);
 
-const SPLIT_KEY = "humbleresume-pane-split";
-const splitPercent = ref(Number(localStorage.getItem(SPLIT_KEY)) || 50);
-
-const editorFlex = computed(() => splitPercent.value);
-const previewFlex = computed(() => 100 - splitPercent.value);
-
-let dragRect: DOMRect | null = null;
-let isVertical = false;
-
-function clampSplit(percent: number, total: number): number {
-  const minPct = (20 / total) * 100;
-  return Math.min(100 - minPct, Math.max(minPct, percent));
-}
-
-function applyDrag(clientX: number, clientY: number) {
-  if (!dragRect) return;
-
-  const offset = isVertical ? clientY - dragRect.top : clientX - dragRect.left;
-  const total = isVertical ? dragRect.height : dragRect.width;
-
-  splitPercent.value = clampSplit((offset / total) * 100, total);
-}
-
-function onPointerMove(e: PointerEvent) {
-  applyDrag(e.clientX, e.clientY);
-}
-
-function stopDrag(e: PointerEvent) {
-  document.body.style.userSelect = "";
-  const el = e.currentTarget as HTMLElement;
-
-  el.releasePointerCapture(e.pointerId);
-  el.removeEventListener("pointermove", onPointerMove);
-  el.removeEventListener("pointerup", stopDrag);
-  el.removeEventListener("pointercancel", stopDrag);
-
-  localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
-}
-
-function startDrag(e: PointerEvent) {
-  document.body.style.userSelect = "none";
-  const el = e.currentTarget as HTMLElement;
-
-  el.setPointerCapture(e.pointerId);
-
-  dragRect = editorLayoutRef.value?.getBoundingClientRect() ?? null;
-  isVertical = window.innerWidth <= 900;
-
-  el.addEventListener("pointermove", onPointerMove);
-  el.addEventListener("pointerup", stopDrag);
-  el.addEventListener("pointercancel", stopDrag);
-}
-
-function resetSplit() {
-  splitPercent.value = 50;
-  localStorage.setItem(SPLIT_KEY, "50");
-}
+const { editorFlex, previewFlex, startDrag, resetSplit } = usePaneResize(editorLayoutRef);
 
 const { markUnsaved } = useFileSystem();
 const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync();
