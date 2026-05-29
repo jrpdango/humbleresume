@@ -66,28 +66,14 @@ export function usePreviewZoom(containerRef: Ref<HTMLElement | null>) {
     isDragging.value = false;
   }
 
-  // Print: reset zoom temporarily so the exported PDF is always 100%
-  let savedZoom = 1.0;
-  function onBeforePrint() {
-    savedZoom = zoom.value;
-    zoom.value = 1.0;
-  }
-  function onAfterPrint() {
-    zoom.value = savedZoom;
-  }
-
   onMounted(() => {
     const el = containerRef.value;
     if (el) el.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("beforeprint", onBeforePrint);
-    window.addEventListener("afterprint", onAfterPrint);
   });
 
   onUnmounted(() => {
     const el = containerRef.value;
     if (el) el.removeEventListener("wheel", onWheel);
-    window.removeEventListener("beforeprint", onBeforePrint);
-    window.removeEventListener("afterprint", onAfterPrint);
   });
 
   return {
