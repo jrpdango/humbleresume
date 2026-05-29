@@ -12,7 +12,8 @@
 
   .toolbar,
   .editor-pane,
-  .home-screen-wrapper {
+  .home-screen-wrapper,
+  .zoom-controls {
     display: none !important;
   }
 
@@ -33,6 +34,13 @@
 
   .preview-zoom-wrapper {
     zoom: 1 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
   .page {
