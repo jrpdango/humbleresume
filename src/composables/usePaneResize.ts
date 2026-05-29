@@ -27,18 +27,19 @@ export function usePaneResize(layoutRef: Ref<HTMLElement | null>) {
       splitPercent.value = clamp(minPct, 100 - minPct, (offset / total) * 100);
     }
 
+    const controller = new AbortController();
+    const { signal } = controller;
+
     function stopDrag(e: PointerEvent) {
       document.body.style.userSelect = "";
       el.releasePointerCapture(e.pointerId);
-      el.removeEventListener("pointermove", onPointerMove);
-      el.removeEventListener("pointerup", stopDrag);
-      el.removeEventListener("pointercancel", stopDrag);
+      controller.abort();
       localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
     }
 
-    el.addEventListener("pointermove", onPointerMove);
-    el.addEventListener("pointerup", stopDrag);
-    el.addEventListener("pointercancel", stopDrag);
+    el.addEventListener("pointermove", onPointerMove, { signal });
+    el.addEventListener("pointerup", stopDrag, { signal });
+    el.addEventListener("pointercancel", stopDrag, { signal });
   }
 
   function resetSplit() {
