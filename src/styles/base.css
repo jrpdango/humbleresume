@@ -56,3 +56,9 @@ select,
 input {
   font-family: inherit;
 }
+
+iconify-icon {
+  vertical-align: middle;
+  font-size: 1rem;
+  padding-bottom: 4px;
+}
