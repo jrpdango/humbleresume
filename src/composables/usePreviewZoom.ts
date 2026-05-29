@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { Ref } from "vue";
 
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.7;
 const MAX_ZOOM = 2.0;
 const STEP = 0.1;
 
