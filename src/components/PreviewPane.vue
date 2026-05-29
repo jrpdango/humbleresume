@@ -118,9 +118,13 @@ defineExpose({
         :class="{ active: panMode }"
         title="Pan mode"
         @click="togglePan"
-      >&#10021;</button>
+      >
+        &#10021;
+      </button>
       <div class="zoom-sep" />
-      <button class="zoom-btn" title="Zoom out" @click="zoomOut">&#8722;</button>
+      <button class="zoom-btn" title="Zoom out" @click="zoomOut">
+        &#8722;
+      </button>
       <span class="zoom-label">{{ zoomLabel }}</span>
       <button class="zoom-btn" title="Zoom in" @click="zoomIn">&#43;</button>
     </div>
@@ -131,10 +135,11 @@ defineExpose({
 .preview-pane {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   background: var(--preview-bg);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   min-width: 0;
   position: relative;
 }
@@ -154,6 +159,7 @@ defineExpose({
   align-items: center;
   padding: 32px 16px;
   gap: 24px;
+  margin: 0 auto;
 }
 
 .page {
