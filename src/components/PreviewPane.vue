@@ -171,7 +171,7 @@ defineExpose({
 }
 
 .zoom-controls {
-  position: sticky;
+  position: fixed;
   bottom: 16px;
   align-self: flex-end;
   margin-right: 16px;
