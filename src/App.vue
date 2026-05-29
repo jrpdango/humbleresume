@@ -4,6 +4,7 @@ import { appStore } from "./stores/appStore";
 import { setAppTheme } from "./services/theme";
 import { useFileSystem } from "./composables/useFileSystem";
 import { useScrollSync } from "./composables/useScrollSync";
+import { usePaneResize } from "./composables/usePaneResize";
 import Toolbar from "./components/Toolbar.vue";
 import EditorPane from "./components/EditorPane.vue";
 import PreviewPane from "./components/PreviewPane.vue";
@@ -14,6 +15,9 @@ const GITHUB_REPO = "jrpdango/humbleresume";
 
 const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
 const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null);
+const editorLayoutRef = ref<HTMLElement | null>(null);
+
+const { editorFlex, previewFlex, startDrag, resetSplit } = usePaneResize(editorLayoutRef);
 
 const { markUnsaved } = useFileSystem();
 const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync();
@@ -76,13 +80,23 @@ onMounted(async () => {
 
     <div v-else class="app-layout">
       <Toolbar />
-      <div class="editor-layout">
+      <div class="editor-layout" ref="editorLayoutRef">
         <EditorPane
           ref="editorPaneRef"
+          :style="{ flex: editorFlex }"
           :on-editor-scroll="onEditorScroll"
           @content-change="onContentChange"
         />
-        <PreviewPane ref="previewPaneRef" @scroll="onPreviewScroll" />
+        <div
+          class="pane-divider"
+          @pointerdown.prevent="startDrag"
+          @dblclick="resetSplit"
+        />
+        <PreviewPane
+          ref="previewPaneRef"
+          :style="{ flex: previewFlex }"
+          @scroll="onPreviewScroll"
+        />
       </div>
     </div>
   </div>
@@ -118,6 +132,46 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .editor-layout {
     flex-direction: column;
+  }
+}
+
+.pane-divider {
+  flex-shrink: 0;
+  width: 1px;
+  background: var(--border);
+  cursor: col-resize;
+  touch-action: none;
+  transition: background 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+.pane-divider::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+}
+
+.pane-divider:hover,
+.pane-divider:active {
+  background: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .pane-divider {
+    width: 100%;
+    height: 1px;
+    cursor: row-resize;
+  }
+
+  .pane-divider::after {
+    left: 0;
+    right: 0;
+    top: -4px;
+    bottom: -4px;
   }
 }
 </style>
