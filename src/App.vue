@@ -14,6 +14,77 @@ const GITHUB_REPO = "jrpdango/humbleresume";
 
 const previewPaneRef = ref<InstanceType<typeof PreviewPane> | null>(null);
 const editorPaneRef = ref<InstanceType<typeof EditorPane> | null>(null);
+const editorLayoutRef = ref<HTMLElement | null>(null);
+
+const SPLIT_KEY = "humbleresume-pane-split";
+const splitPercent = ref(Number(localStorage.getItem(SPLIT_KEY)) || 50);
+const isDragging = ref(false);
+
+const editorFlex = computed(() => splitPercent.value);
+const previewFlex = computed(() => 100 - splitPercent.value);
+
+function clampSplit(percent: number): number {
+  if (!editorLayoutRef.value) return percent;
+  const rect = editorLayoutRef.value.getBoundingClientRect();
+  const total = window.innerWidth <= 900 ? rect.height : rect.width;
+  const minPct = (20 / total) * 100;
+  return Math.min(100 - minPct, Math.max(minPct, percent));
+}
+
+function applyDrag(clientX: number, clientY: number) {
+  if (!editorLayoutRef.value) return;
+  const rect = editorLayoutRef.value.getBoundingClientRect();
+  const vertical = window.innerWidth <= 900;
+  const offset = vertical ? clientY - rect.top : clientX - rect.left;
+  const total = vertical ? rect.height : rect.width;
+  splitPercent.value = clampSplit((offset / total) * 100);
+  localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
+}
+
+function onMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return;
+  applyDrag(e.clientX, e.clientY);
+}
+
+function stopDrag() {
+  isDragging.value = false;
+  document.body.style.userSelect = "";
+  document.removeEventListener("mousemove", onMouseMove);
+  document.removeEventListener("mouseup", stopDrag);
+}
+
+function startDrag() {
+  isDragging.value = true;
+  document.body.style.userSelect = "none";
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", stopDrag);
+}
+
+function onTouchMove(e: TouchEvent) {
+  e.preventDefault();
+  if (!isDragging.value) return;
+  const t = e.touches[0];
+  applyDrag(t.clientX, t.clientY);
+}
+
+function stopDragTouch() {
+  isDragging.value = false;
+  document.body.style.userSelect = "";
+  document.removeEventListener("touchmove", onTouchMove);
+  document.removeEventListener("touchend", stopDragTouch);
+}
+
+function startDragTouch() {
+  isDragging.value = true;
+  document.body.style.userSelect = "none";
+  document.addEventListener("touchmove", onTouchMove, { passive: false });
+  document.addEventListener("touchend", stopDragTouch);
+}
+
+function resetSplit() {
+  splitPercent.value = 50;
+  localStorage.setItem(SPLIT_KEY, "50");
+}
 
 const { markUnsaved } = useFileSystem();
 const { syncEditorToPreview, syncPreviewToEditor } = useScrollSync();
@@ -76,13 +147,25 @@ onMounted(async () => {
 
     <div v-else class="app-layout">
       <Toolbar />
-      <div class="editor-layout">
+      <div class="editor-layout" ref="editorLayoutRef">
         <EditorPane
           ref="editorPaneRef"
+          :style="{ flex: editorFlex }"
           :on-editor-scroll="onEditorScroll"
           @content-change="onContentChange"
         />
-        <PreviewPane ref="previewPaneRef" @scroll="onPreviewScroll" />
+        <div
+          class="pane-divider"
+          :class="{ dragging: isDragging }"
+          @mousedown.prevent="startDrag"
+          @touchstart.prevent="startDragTouch"
+          @dblclick="resetSplit"
+        />
+        <PreviewPane
+          ref="previewPaneRef"
+          :style="{ flex: previewFlex }"
+          @scroll="onPreviewScroll"
+        />
       </div>
     </div>
   </div>
@@ -118,6 +201,45 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .editor-layout {
     flex-direction: column;
+  }
+}
+
+.pane-divider {
+  flex-shrink: 0;
+  width: 1px;
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+.pane-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+}
+
+.pane-divider:hover,
+.pane-divider.dragging {
+  background: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .pane-divider {
+    width: 100%;
+    height: 1px;
+    cursor: row-resize;
+  }
+
+  .pane-divider::after {
+    left: 0;
+    right: 0;
+    top: -4px;
+    bottom: -4px;
   }
 }
 </style>
