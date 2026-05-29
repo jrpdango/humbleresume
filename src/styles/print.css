@@ -31,6 +31,10 @@
     padding: 0 !important;
   }
 
+  .preview-zoom-wrapper {
+    zoom: 1 !important;
+  }
+
   .page {
     box-shadow: none !important;
     margin: 0 !important;
