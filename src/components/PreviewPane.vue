@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import { usePreview } from "../composables/usePreview";
+import { usePreviewZoom } from "../composables/usePreviewZoom";
 import { getTemplateCss } from "../services/theme";
 import { appStore } from "../stores/appStore";
 import "katex/dist/katex.min.css";
@@ -11,6 +12,19 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLElement | null>(null);
 const { pages, update, getPageClass } = usePreview();
+const {
+  panMode,
+  isDragging,
+  zoomLabel,
+  zoomWrapperStyle,
+  zoomIn,
+  zoomOut,
+  togglePan,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+} = usePreviewZoom(containerRef);
 
 let templateStyleEl: HTMLStyleElement | null = null;
 
@@ -77,14 +91,43 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="containerRef" class="preview-pane" @scroll.passive="onScroll">
-    <div
-      v-for="(pageHtml, i) in pages"
-      :key="i"
-      class="page"
-      :class="getPageClass()"
-      v-html="pageHtml"
-    />
+  <div
+    ref="containerRef"
+    class="preview-pane"
+    :class="{ 'pan-mode': panMode, grabbing: isDragging }"
+    :style="panMode ? { touchAction: 'none' } : {}"
+    @scroll.passive="onScroll"
+    @pointerdown="onPointerDown"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerCancel"
+  >
+    <div class="preview-zoom-wrapper" :style="zoomWrapperStyle">
+      <div
+        v-for="(pageHtml, i) in pages"
+        :key="i"
+        class="page"
+        :class="getPageClass()"
+        v-html="pageHtml"
+      />
+    </div>
+
+    <div class="zoom-controls" @pointerdown.stop>
+      <button
+        class="zoom-btn"
+        :class="{ active: panMode }"
+        title="Pan mode"
+        @click="togglePan"
+      >
+        &#10021;
+      </button>
+      <div class="zoom-sep" />
+      <button class="zoom-btn" title="Zoom out" @click="zoomOut">
+        &#8722;
+      </button>
+      <span class="zoom-label">{{ zoomLabel }}</span>
+      <button class="zoom-btn" title="Zoom in" @click="zoomIn">&#43;</button>
+    </div>
   </div>
 </template>
 
@@ -92,13 +135,31 @@ defineExpose({
 .preview-pane {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   background: var(--preview-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  position: relative;
+}
+
+.preview-pane.pan-mode {
+  cursor: grab;
+}
+
+.preview-pane.grabbing {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.preview-zoom-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 32px 16px;
   gap: 24px;
-  min-width: 0;
+  margin: 0 auto;
 }
 
 .page {
@@ -107,6 +168,63 @@ defineExpose({
   color: #000;
   flex-shrink: 0;
   overflow: visible;
+}
+
+.zoom-controls {
+  position: fixed;
+  bottom: 16px;
+  align-self: flex-end;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  user-select: none;
+  z-index: 10;
+}
+
+.zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: background 0.12s;
+}
+
+.zoom-btn:hover {
+  background: var(--btn-hover);
+}
+
+.zoom-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.zoom-label {
+  min-width: 36px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.zoom-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 3px;
+  flex-shrink: 0;
 }
 </style>
 
