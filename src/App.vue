@@ -18,7 +18,6 @@ const editorLayoutRef = ref<HTMLElement | null>(null);
 
 const SPLIT_KEY = "humbleresume-pane-split";
 const splitPercent = ref(Number(localStorage.getItem(SPLIT_KEY)) || 50);
-const isDragging = ref(false);
 
 const editorFlex = computed(() => splitPercent.value);
 const previewFlex = computed(() => 100 - splitPercent.value);
@@ -41,44 +40,26 @@ function applyDrag(clientX: number, clientY: number) {
   localStorage.setItem(SPLIT_KEY, String(splitPercent.value));
 }
 
-function onMouseMove(e: MouseEvent) {
-  if (!isDragging.value) return;
+function onPointerMove(e: PointerEvent) {
   applyDrag(e.clientX, e.clientY);
 }
 
-function stopDrag() {
-  isDragging.value = false;
+function stopDrag(e: PointerEvent) {
   document.body.style.userSelect = "";
-  document.removeEventListener("mousemove", onMouseMove);
-  document.removeEventListener("mouseup", stopDrag);
+  const el = e.currentTarget as HTMLElement;
+  el.releasePointerCapture(e.pointerId);
+  el.removeEventListener("pointermove", onPointerMove);
+  el.removeEventListener("pointerup", stopDrag);
+  el.removeEventListener("pointercancel", stopDrag);
 }
 
-function startDrag() {
-  isDragging.value = true;
+function startDrag(e: PointerEvent) {
   document.body.style.userSelect = "none";
-  document.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseup", stopDrag);
-}
-
-function onTouchMove(e: TouchEvent) {
-  e.preventDefault();
-  if (!isDragging.value) return;
-  const t = e.touches[0];
-  applyDrag(t.clientX, t.clientY);
-}
-
-function stopDragTouch() {
-  isDragging.value = false;
-  document.body.style.userSelect = "";
-  document.removeEventListener("touchmove", onTouchMove);
-  document.removeEventListener("touchend", stopDragTouch);
-}
-
-function startDragTouch() {
-  isDragging.value = true;
-  document.body.style.userSelect = "none";
-  document.addEventListener("touchmove", onTouchMove, { passive: false });
-  document.addEventListener("touchend", stopDragTouch);
+  const el = e.currentTarget as HTMLElement;
+  el.setPointerCapture(e.pointerId);
+  el.addEventListener("pointermove", onPointerMove);
+  el.addEventListener("pointerup", stopDrag);
+  el.addEventListener("pointercancel", stopDrag);
 }
 
 function resetSplit() {
@@ -156,9 +137,7 @@ onMounted(async () => {
         />
         <div
           class="pane-divider"
-          :class="{ dragging: isDragging }"
-          @mousedown.prevent="startDrag"
-          @touchstart.prevent="startDragTouch"
+          @pointerdown.prevent="startDrag"
           @dblclick="resetSplit"
         />
         <PreviewPane
@@ -209,13 +188,14 @@ onMounted(async () => {
   width: 1px;
   background: var(--border);
   cursor: col-resize;
+  touch-action: none;
   transition: background 0.15s;
   position: relative;
   z-index: 1;
 }
 
 .pane-divider::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -224,7 +204,7 @@ onMounted(async () => {
 }
 
 .pane-divider:hover,
-.pane-divider.dragging {
+.pane-divider:active {
   background: var(--accent);
 }
 
