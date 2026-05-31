@@ -6,10 +6,17 @@
   "permissions": [
     "core:default",
     "opener:default",
-    { "identifier": "fs:allow-read-text-file", "allow": [{ "path": "$HOME/**" }] },
-    { "identifier": "fs:allow-write-text-file", "allow": [{ "path": "$HOME/**" }] },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$HOME/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$HOME/**" }]
+    },
     "dialog:allow-open",
     "dialog:allow-save",
-    "dialog:allow-confirm"
+    "dialog:allow-confirm",
+    "core:webview:allow-print"
   ]
 }
