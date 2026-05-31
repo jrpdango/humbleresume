@@ -236,14 +236,14 @@ dl {
 }
 
 .page-a4 {
-  width: 8.27in;
-  height: 11.69in;
-  padding: 0.5in 0.5in;
+  width: 210mm;
+  height: 297mm;
+  padding: 12.7mm 12.7mm;
 }
 
 .page-letter {
-  width: 8.5in;
-  height: 11in;
-  padding: 0.5in 0.5in;
+  width: 215.9mm;
+  height: 279.4mm;
+  padding: 12.7mm 12.7mm;
 }
 </style>
