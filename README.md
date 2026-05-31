@@ -32,5 +32,5 @@ pnpm tauri build
 ```
 ## Notes
 
-PDF export is handled by the OS's print dialog. You probably have to tinker around with it to get the proper output such as using A4/Letter Borderless.
+PDF export is handled by the OS's print dialog. You probably have to tinker around with it to get the proper output such as using A4/Letter Borderless. <br />
 macOS in particular can be pretty finnicky with its printing options, so you may have to re-export with Preview.
