@@ -113,20 +113,17 @@ jobs:
             bundles: appimage,deb
     steps:
       - name: Check out release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.tag }}
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - name: Set up pnpm and Node.js
+        uses: pnpm/setup@v2
         with:
-          version: 9
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: pnpm
+          version: 12
+          runtime: node@lts
+          cache: true
+          install: false
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
