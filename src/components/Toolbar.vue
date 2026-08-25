@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { appStore, persistSettings } from "../stores/appStore";
 import { useFileSystem } from "../composables/useFileSystem";
+import { usePdfExport } from "../composables/usePdfExport";
 import { setTemplate, setAppTheme, getTemplateCss } from "../services/theme";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { confirm as confirmDialog } from "@tauri-apps/plugin-dialog";
@@ -10,6 +11,8 @@ import moonSvg from "../assets/moon.svg?raw";
 import sunSvg from "../assets/sun.svg?raw";
 
 const { saveFile, saveFileAs, openFile } = useFileSystem();
+const { exportPdf: exportPdfNative } = usePdfExport();
+const isExportingPdf = ref(false);
 
 const saveStatusLabel = computed(() => {
   switch (appStore.saveStatus) {
@@ -32,8 +35,22 @@ function goHome() {
   appStore.view = "home";
 }
 
-function exportPdf() {
+function printResume() {
   window.print();
+}
+
+async function exportPdf() {
+  isExportingPdf.value = true;
+  try {
+    await exportPdfNative();
+  } catch (err) {
+    await confirmDialog(err instanceof Error ? err.message : String(err), {
+      title: "Export PDF Failed",
+      kind: "error",
+    });
+  } finally {
+    isExportingPdf.value = false;
+  }
 }
 
 function toggleTheme() {
@@ -102,7 +119,14 @@ async function openUpdatePage() {
         <option value="Letter">Letter</option>
       </select>
       <div class="sep" />
-      <button class="btn btn-primary" @click="exportPdf">Export PDF</button>
+      <button class="btn" @click="printResume">Print…</button>
+      <button
+        class="btn btn-primary"
+        :disabled="isExportingPdf"
+        @click="exportPdf"
+      >
+        {{ isExportingPdf ? "Exporting…" : "Export PDF" }}
+      </button>
     </div>
 
     <div class="toolbar-section toolbar-right">

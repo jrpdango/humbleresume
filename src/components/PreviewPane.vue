@@ -27,6 +27,7 @@ const {
 } = usePreviewZoom(containerRef);
 
 let templateStyleEl: HTMLStyleElement | null = null;
+let printPageStyleEl: HTMLStyleElement | null = null;
 
 function injectStyle() {
   if (!templateStyleEl) {
@@ -37,6 +38,14 @@ function injectStyle() {
     appStore.currentFile?.customCss ?? getTemplateCss(appStore.templateName);
 }
 
+function injectPrintPageStyle() {
+  if (!printPageStyleEl) {
+    printPageStyleEl = document.createElement("style");
+    document.head.appendChild(printPageStyleEl);
+  }
+  printPageStyleEl.textContent = `@media print { @page { size: ${appStore.pageSize === "A4" ? "A4" : "letter"}; margin: 0; } }`;
+}
+
 function repaginate() {
   if (appStore.currentFile?.content !== undefined) {
     update(appStore.currentFile.content);
@@ -45,12 +54,15 @@ function repaginate() {
 
 onMounted(() => {
   injectStyle();
+  injectPrintPageStyle();
   if (appStore.currentFile) update(appStore.currentFile.content);
 });
 
 onUnmounted(() => {
   templateStyleEl?.remove();
   templateStyleEl = null;
+  printPageStyleEl?.remove();
+  printPageStyleEl = null;
 });
 
 watch(
@@ -76,7 +88,13 @@ watch(
   },
 );
 
-watch(() => appStore.pageSize, repaginate);
+watch(
+  () => appStore.pageSize,
+  () => {
+    injectPrintPageStyle();
+    repaginate();
+  },
+);
 
 function onScroll(e: Event) {
   const el = e.target as HTMLElement;

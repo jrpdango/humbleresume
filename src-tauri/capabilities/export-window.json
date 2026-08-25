@@ -1,0 +1,6 @@
+{
+  "identifier": "export-window",
+  "description": "Capability for the hidden export window",
+  "windows": ["export"],
+  "permissions": ["core:default"]
+}
