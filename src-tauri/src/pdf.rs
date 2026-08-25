@@ -224,7 +224,7 @@ mod macos {
     use super::{finish, ExportPayload};
     use block2::RcBlock;
     use objc2::rc::Retained;
-    use objc2::AnyThread;
+    use objc2::MainThreadMarker;
     use objc2_foundation::{NSData, NSError, NSString, NSURL};
     use objc2_web_kit::{WKPDFConfiguration, WKWebView};
     use std::ptr::NonNull;
@@ -249,7 +249,8 @@ mod macos {
                 let webview: Retained<WKWebView> = Retained::retain(webview_ptr.as_ptr())
                     .expect("webview pointer must be valid");
 
-                let config = WKPDFConfiguration::new();
+                let mtm = MainThreadMarker::new().expect("must be called on main thread");
+                let config = WKPDFConfiguration::new(mtm);
                 let complete_main = main.clone();
                 let complete_export = export.clone();
                 let handler = RcBlock::new(move |data: *mut NSData, error: *mut NSError| {
