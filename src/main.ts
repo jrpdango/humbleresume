@@ -15,5 +15,9 @@ import { createApp } from "vue";
 import "./styles/base.css";
 import "./styles/print.css";
 import App from "./App.vue";
+import ExportApp from "./export/ExportApp.vue";
 
-createApp(App).mount("#app");
+const isExportMode =
+  new URLSearchParams(window.location.search).get("mode") === "export";
+
+createApp(isExportMode ? ExportApp : App).mount("#app");
