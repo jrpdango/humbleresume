@@ -32,11 +32,10 @@ webkit2gtk = "2.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
-objc2-web-kit = { version = "0.3", features = ["WKWebView", "WKPDFConfiguration"] }
-objc2-foundation = { version = "0.3", features = ["NSData", "NSError", "NSObject"] }
-block2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSPrintInfo", "NSPrintOperation", "NSResponder", "NSView", "NSWindow"] }
+objc2-web-kit = { version = "0.3", features = ["WKWebView"] }
+objc2-foundation = { version = "0.3", features = ["NSDictionary", "NSGeometry", "NSObject", "NSString", "NSURL"] }
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"
 windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_WinRT"] }
-

@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::{
-    AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-};
+use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,14 +50,18 @@ pub fn export_pdf(
 
     // Kept visible but positioned far offscreen: hidden webviews may skip
     // layout on some platforms, which would break pagination and printing.
-    WebviewWindowBuilder::new(&app, "export", WebviewUrl::App("index.html?mode=export".into()))
-        .title("HumbleResume Export")
-        .inner_size(900.0, 1200.0)
-        .position(-10000.0, -10000.0)
-        .decorations(false)
-        .skip_taskbar(true)
-        .build()
-        .map_err(|e| e.to_string())?;
+    WebviewWindowBuilder::new(
+        &app,
+        "export",
+        WebviewUrl::App("index.html?mode=export".into()),
+    )
+    .title("HumbleResume Export")
+    .inner_size(900.0, 1200.0)
+    .position(-10000.0, -10000.0)
+    .decorations(false)
+    .skip_taskbar(true)
+    .build()
+    .map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -137,7 +139,12 @@ fn print_window(
     }
 }
 
-fn finish(main_window: &WebviewWindow, export_window: &WebviewWindow, ok: bool, error: Option<String>) {
+fn finish(
+    main_window: &WebviewWindow,
+    export_window: &WebviewWindow,
+    ok: bool,
+    error: Option<String>,
+) {
     let _ = main_window.emit(
         "pdf-export-result",
         serde_json::json!({ "ok": ok, "error": error }),
@@ -222,22 +229,102 @@ mod linux {
 #[cfg(target_os = "macos")]
 mod macos {
     use super::{finish, ExportPayload};
-    use block2::RcBlock;
     use objc2::rc::Retained;
-    use objc2::MainThreadMarker;
-    use objc2_foundation::{NSData, NSError, NSString, NSURL};
-    use objc2_web_kit::{WKPDFConfiguration, WKWebView};
+    use objc2::runtime::AnyObject;
+    use objc2::ClassType;
+    use objc2_app_kit::{
+        NSPrintInfo, NSPrintJobSavingURL, NSPrintOperation, NSPrintSaveJob,
+        NSPrintingPaginationMode, NSWindow,
+    };
+    use objc2_foundation::{NSPoint, NSRect, NSSize, NSString, NSURL};
+    use objc2_web_kit::WKWebView;
+    use std::fs::File;
+    use std::io::{Read, Seek, SeekFrom};
+    use std::path::{Path, PathBuf};
     use std::ptr::NonNull;
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
     use tauri::WebviewWindow;
+
+    const POLL_INTERVAL: Duration = Duration::from_millis(250);
+    const POLL_ATTEMPTS: usize = 240;
+
+    fn paper_size_points(page_size: &str) -> NSSize {
+        match page_size {
+            "A4" => NSSize::new(595.2756, 841.8898),
+            _ => NSSize::new(612.0, 792.0),
+        }
+    }
+
+    fn temporary_path(path: &Path) -> PathBuf {
+        let name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("resume.pdf");
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        path.with_file_name(format!(".{name}.{nonce}.tmp"))
+    }
+
+    fn pdf_is_complete(path: &Path) -> bool {
+        let Ok(mut file) = File::open(path) else {
+            return false;
+        };
+        let Ok(length) = file.metadata().map(|metadata| metadata.len()) else {
+            return false;
+        };
+        if length == 0 {
+            return false;
+        }
+
+        let tail_length = length.min(2048);
+        if file.seek(SeekFrom::End(-(tail_length as i64))).is_err() {
+            return false;
+        }
+
+        let mut tail = vec![0; tail_length as usize];
+        file.read_exact(&mut tail).is_ok() && tail.windows(5).any(|window| window == b"%%EOF")
+    }
+
+    fn print_info(path: &Path, paper_size: NSSize) -> Retained<NSPrintInfo> {
+        let print_info = NSPrintInfo::new();
+        print_info.setPaperSize(paper_size);
+        print_info.setTopMargin(0.0);
+        print_info.setBottomMargin(0.0);
+        print_info.setLeftMargin(0.0);
+        print_info.setRightMargin(0.0);
+        print_info.setHorizontalPagination(NSPrintingPaginationMode::Automatic);
+        print_info.setVerticalPagination(NSPrintingPaginationMode::Automatic);
+        print_info.setHorizontallyCentered(false);
+        print_info.setVerticallyCentered(false);
+        print_info.setScalingFactor(1.0);
+
+        let path = NSString::from_str(&path.to_string_lossy());
+        let url = NSURL::fileURLWithPath(&path);
+        let url_object: &AnyObject = url.as_super().as_super();
+        unsafe {
+            print_info
+                .dictionary()
+                .insert(NSPrintJobSavingURL, url_object);
+            print_info.setJobDisposition(NSPrintSaveJob);
+        }
+        print_info
+    }
 
     pub fn print(
         export_window: &WebviewWindow,
         main_window: &WebviewWindow,
         payload: &ExportPayload,
     ) -> Result<(), String> {
-        let path = payload.path.clone();
+        let output_path = PathBuf::from(&payload.path);
+        let temporary_path = temporary_path(&output_path);
+        let paper_size = paper_size_points(&payload.page_size);
         let main = main_window.clone();
         let export = export_window.clone();
+        let print_window = export_window.clone();
+
+        let _ = std::fs::remove_file(&temporary_path);
 
         export_window
             .with_webview(move |platform_webview| unsafe {
@@ -246,37 +333,76 @@ mod macos {
                     finish(&main, &export, false, Some("no webview handle".into()));
                     return;
                 };
-                let webview: Retained<WKWebView> = Retained::retain(webview_ptr.as_ptr())
-                    .expect("webview pointer must be valid");
+                let webview: Retained<WKWebView> =
+                    Retained::retain(webview_ptr.as_ptr()).expect("webview pointer must be valid");
 
-                let mtm = MainThreadMarker::new().expect("must be called on main thread");
-                let config = WKPDFConfiguration::new(mtm);
+                let print_info = print_info(&temporary_path, paper_size);
+                let operation = webview.printOperationWithPrintInfo(&print_info);
+                let Some(operation_view) = operation.view() else {
+                    finish(
+                        &main,
+                        &export,
+                        false,
+                        Some("no print view available".into()),
+                    );
+                    return;
+                };
+                operation_view.setFrame(NSRect::new(NSPoint::new(0.0, 0.0), paper_size));
+                operation.setShowsPrintPanel(false);
+                operation.setShowsProgressPanel(false);
+
+                let Ok(ns_window_ptr) = print_window.ns_window() else {
+                    finish(
+                        &main,
+                        &export,
+                        false,
+                        Some("no native window handle".into()),
+                    );
+                    return;
+                };
+                let ns_window = &*(ns_window_ptr as *mut NSWindow);
+
+                // WKWebView printing needs the modal run-loop path. The plain
+                // runOperation call can return before WebKit has rendered the
+                // print view, producing an empty or incomplete PDF.
+                operation.runOperationModalForWindow_delegate_didRunSelector_contextInfo(
+                    ns_window,
+                    None,
+                    None,
+                    std::ptr::null_mut(),
+                );
+
+                // AppKit may finish writing the save job after the modal call
+                // returns. Keep the operation retained until the PDF is valid.
+                let operation_ptr = Retained::into_raw(operation) as usize;
                 let complete_main = main.clone();
                 let complete_export = export.clone();
-                let handler = RcBlock::new(move |data: *mut NSData, error: *mut NSError| {
-                    if let Some(error) = error.as_ref() {
-                        finish(
-                            &complete_main,
-                            &complete_export,
-                            false,
-                            Some(error.localizedDescription().to_string()),
-                        );
-                        return;
-                    }
-                    let Some(data) = data.as_ref() else {
-                        finish(&complete_main, &complete_export, false, Some("no PDF data returned".into()));
-                        return;
-                    };
-                    let path = NSString::from_str(&path);
-                    let url = NSURL::fileURLWithPath(&path);
-                    if data.writeToURL_atomically(&url, true) {
-                        finish(&complete_main, &complete_export, true, None);
-                    } else {
-                        finish(&complete_main, &complete_export, false, Some("failed to write PDF file".into()));
-                    }
-                });
+                let poll_export = export.clone();
+                std::thread::spawn(move || {
+                    let mut ok = false;
+                    let mut error = None;
 
-                webview.createPDFWithConfiguration_completionHandler(Some(&config), &handler);
+                    for _ in 0..POLL_ATTEMPTS {
+                        if pdf_is_complete(&temporary_path) {
+                            match std::fs::rename(&temporary_path, &output_path) {
+                                Ok(()) => ok = true,
+                                Err(reason) => error = Some(reason.to_string()),
+                            }
+                            break;
+                        }
+                        std::thread::sleep(POLL_INTERVAL);
+                    }
+
+                    if !ok && error.is_none() {
+                        error = Some("PDF export timed out".into());
+                        let _ = std::fs::remove_file(&temporary_path);
+                    }
+
+                    let _ = poll_export.run_on_main_thread(move || {
+                        drop(Retained::from_raw(operation_ptr as *mut NSPrintOperation));
+                        finish(&complete_main, &complete_export, ok, error);
+                    });
+                });
             })
             .map_err(|e| e.to_string())
     }
@@ -290,7 +416,9 @@ mod windows_impl {
         ICoreWebView2PrintSettings, ICoreWebView2PrintToPdfCompletedHandler,
         ICoreWebView2PrintToPdfCompletedHandler_Impl, ICoreWebView2_7,
     };
-    use windows::core::{implement, Error as WindowsError, Result as WindowsResult, PCWSTR, HSTRING};
+    use windows::core::{
+        implement, Error as WindowsError, Result as WindowsResult, HSTRING, PCWSTR,
+    };
     use windows_core::BOOL;
 
     #[implement(ICoreWebView2PrintToPdfCompletedHandler)]
@@ -306,10 +434,20 @@ mod windows_impl {
                     finish(&self.main_window, &self.export_window, true, None);
                 }
                 Ok(()) => {
-                    finish(&self.main_window, &self.export_window, false, Some("print job did not complete".into()));
+                    finish(
+                        &self.main_window,
+                        &self.export_window,
+                        false,
+                        Some("print job did not complete".into()),
+                    );
                 }
                 Err(err) => {
-                    finish(&self.main_window, &self.export_window, false, Some(err.message()));
+                    finish(
+                        &self.main_window,
+                        &self.export_window,
+                        false,
+                        Some(err.message()),
+                    );
                 }
             }
             Ok(())
