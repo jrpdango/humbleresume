@@ -1,0 +1,59 @@
+name: Test Windows Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Windows target
+        required: true
+        type: choice
+        options:
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+        default: x86_64-pc-windows-msvc
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/setup@v2
+        with:
+          version: 12
+          runtime: node@lts
+          cache: true
+          install: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ inputs.target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Set test version
+        shell: pwsh
+        run: |
+          '{"version":"0.0.0"}' | Set-Content src-tauri/ci-release.json
+
+      - name: Build Windows installer
+        run: >
+          pnpm exec tauri build
+          --target ${{ inputs.target }}
+          --bundles nsis
+          --config src-tauri/ci-release.json
+          --no-sign
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-${{ inputs.target }}
+          path: src-tauri/target/${{ inputs.target }}/release/bundle/nsis/*
