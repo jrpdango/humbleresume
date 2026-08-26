@@ -477,33 +477,36 @@ mod windows_impl {
                 let handler_export = export.clone();
 
                 let run = move || -> WindowsResult<()> {
-                    let controller = platform_webview.controller();
-                    let webview = controller.CoreWebView2()?;
-                    let webview: ICoreWebView2_7 = webview.cast()?;
+                    unsafe {
+                        let controller = platform_webview.controller();
+                        let webview = controller.CoreWebView2()?;
+                        let webview: ICoreWebView2_7 = webview.cast()?;
 
-                    let environment = platform_webview.environment();
-                    let environment: ICoreWebView2Environment6 = environment.cast()?;
-                    let settings: ICoreWebView2PrintSettings = environment.CreatePrintSettings()?;
+                        let environment = platform_webview.environment();
+                        let environment: ICoreWebView2Environment6 = environment.cast()?;
+                        let settings: ICoreWebView2PrintSettings =
+                            environment.CreatePrintSettings()?;
 
-                    settings.SetPageWidth(width_in)?;
-                    settings.SetPageHeight(height_in)?;
-                    settings.SetMarginTop(0.0)?;
-                    settings.SetMarginBottom(0.0)?;
-                    settings.SetMarginLeft(0.0)?;
-                    settings.SetMarginRight(0.0)?;
-                    settings.SetShouldPrintBackgrounds(true)?;
-                    settings.SetShouldPrintHeaderAndFooter(false)?;
-                    settings.SetScaleFactor(1.0)?;
+                        settings.SetPageWidth(width_in)?;
+                        settings.SetPageHeight(height_in)?;
+                        settings.SetMarginTop(0.0)?;
+                        settings.SetMarginBottom(0.0)?;
+                        settings.SetMarginLeft(0.0)?;
+                        settings.SetMarginRight(0.0)?;
+                        settings.SetShouldPrintBackgrounds(true)?;
+                        settings.SetShouldPrintHeaderAndFooter(false)?;
+                        settings.SetScaleFactor(1.0)?;
 
-                    let handler: ICoreWebView2PrintToPdfCompletedHandler =
-                        PrintToPdfCompletedHandler {
-                            main_window: handler_main,
-                            export_window: handler_export,
-                        }
-                        .into();
+                        let handler: ICoreWebView2PrintToPdfCompletedHandler =
+                            PrintToPdfCompletedHandler {
+                                main_window: handler_main,
+                                export_window: handler_export,
+                            }
+                            .into();
 
-                    let path_wide = HSTRING::from(path.as_str());
-                    webview.PrintToPdf(PCWSTR(path_wide.as_ptr()), &settings, &handler)
+                        let path_wide = HSTRING::from(path.as_str());
+                        webview.PrintToPdf(PCWSTR(path_wide.as_ptr()), &settings, &handler)
+                    }
                 };
 
                 if let Err(err) = run() {
