@@ -1,6 +1,9 @@
 name: Test Windows Build
 
 on:
+  push:
+    branches:
+      - fix/windows-build
   workflow_dispatch:
     inputs:
       target:
