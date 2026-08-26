@@ -50,7 +50,7 @@ jobs:
       - name: Build Windows installer
         run: >
           pnpm exec tauri build
-          --target ${{ inputs.target }}
+          --target ${{ inputs.target || 'x86_64-pc-windows-msvc' }}
           --bundles nsis
           --config src-tauri/ci-release.json
           --no-sign
