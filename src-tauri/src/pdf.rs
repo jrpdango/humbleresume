@@ -413,11 +413,11 @@ mod windows_impl {
     use super::{finish, ExportPayload};
     use tauri::WebviewWindow;
     use webview2_com::Microsoft::Web::WebView2::Win32::{
-        ICoreWebView2PrintSettings, ICoreWebView2PrintToPdfCompletedHandler,
-        ICoreWebView2PrintToPdfCompletedHandler_Impl, ICoreWebView2_7,
+        ICoreWebView2Environment6, ICoreWebView2PrintSettings,
+        ICoreWebView2PrintToPdfCompletedHandler, ICoreWebView2PrintToPdfCompletedHandler_Impl,
+        ICoreWebView2_7,
     };
-    use windows::core::{implement, Result as WindowsResult, HSTRING, PCWSTR};
-    use windows::Win32::Foundation::BOOL;
+    use windows::core::{implement, BOOL, HRESULT, HSTRING, Interface, PCWSTR, Result as WindowsResult};
 
     #[implement(ICoreWebView2PrintToPdfCompletedHandler)]
     struct PrintToPdfCompletedHandler {
@@ -426,8 +426,8 @@ mod windows_impl {
     }
 
     impl ICoreWebView2PrintToPdfCompletedHandler_Impl for PrintToPdfCompletedHandler_Impl {
-        fn Invoke(&self, errorcode: WindowsResult<()>, issuccessful: BOOL) -> WindowsResult<()> {
-            match errorcode {
+        fn Invoke(&self, errorcode: HRESULT, issuccessful: BOOL) -> WindowsResult<()> {
+            match errorcode.ok() {
                 Ok(()) if issuccessful.as_bool() => {
                     finish(&self.main_window, &self.export_window, true, None);
                 }
@@ -482,6 +482,7 @@ mod windows_impl {
                     let webview: ICoreWebView2_7 = webview.cast()?;
 
                     let environment = platform_webview.environment();
+                    let environment: ICoreWebView2Environment6 = environment.cast()?;
                     let settings: ICoreWebView2PrintSettings = environment.CreatePrintSettings()?;
 
                     settings.SetPageWidth(width_in)?;
@@ -490,8 +491,8 @@ mod windows_impl {
                     settings.SetMarginBottom(0.0)?;
                     settings.SetMarginLeft(0.0)?;
                     settings.SetMarginRight(0.0)?;
-                    settings.SetShouldPrintBackgrounds(BOOL::from(true))?;
-                    settings.SetShouldPrintHeaderAndFooter(BOOL::from(false))?;
+                    settings.SetShouldPrintBackgrounds(true)?;
+                    settings.SetShouldPrintHeaderAndFooter(false)?;
                     settings.SetScaleFactor(1.0)?;
 
                     let handler: ICoreWebView2PrintToPdfCompletedHandler =
