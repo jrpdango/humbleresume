@@ -416,9 +416,7 @@ mod windows_impl {
         ICoreWebView2PrintSettings, ICoreWebView2PrintToPdfCompletedHandler,
         ICoreWebView2PrintToPdfCompletedHandler_Impl, ICoreWebView2_7,
     };
-    use windows::core::{
-        implement, Error as WindowsError, Result as WindowsResult, HSTRING, PCWSTR,
-    };
+    use windows::core::{implement, Result as WindowsResult, HSTRING, PCWSTR};
     use windows_core::BOOL;
 
     #[implement(ICoreWebView2PrintToPdfCompletedHandler)]
