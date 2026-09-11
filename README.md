@@ -8,7 +8,7 @@
 
 > [!NOTE]
 > **This project is in early development.**
-> <br />Expect rough edges, especially on Windows, as that build hasn't been tested thoroughly and is known to be buggy.
+> <br />Expect rough edges. Release builds **have not been tested**, so they may not work on your system just yet.
 
 ## Features
 
